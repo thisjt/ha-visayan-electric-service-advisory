@@ -16,6 +16,10 @@ from .const import DOMAIN, DEFAULT_SCAN_INTERVAL, SERVICE_ADVISORY_URL
 
 _LOGGER = logging.getLogger(__name__)
 
+# Unicode "CANCELLED" in mathematical bold capitals (𝗖𝗔𝗡𝗖𝗘𝗟𝗟𝗘𝗗)
+# The text uses Unicode Mathematical Bold Capital letters
+CANCELLED_UNICODE = "\U0001d402\U0001d400\U0001d40d\U0001d402\U0001d404\U0001d40b\U0001d40b\U0001d404\U0001d403"
+
 def _parse_post_html(html_content: str, post_data: dict) -> list[dict]:
     """Parse the full post HTML into a list of advisory dicts."""
     # Find the post content container
