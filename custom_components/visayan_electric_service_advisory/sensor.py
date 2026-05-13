@@ -2,6 +2,10 @@
 from __future__ import annotations
 
 from homeassistant.components.button import ButtonEntity
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 
 async def async_setup_entry(
@@ -10,7 +14,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensor and button entities from a config entry."""
-    coordinator: VECOServiceAdvisoryCoordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
+
     # Add both the advisory count sensor and a manual scrape button
     async_add_entities([
         VECOAdvisoryCountSensor(coordinator, entry),
@@ -39,21 +43,21 @@ class ManualScrapeButton(CoordinatorEntity, ButtonEntity):
         """Handle the button press – force a refresh of the coordinator."""
         await self.coordinator.async_refresh()
 
-from .const import DOMAIN, COORDINATOR
+
 from .coordinator import VECOServiceAdvisoryCoordinator
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+
+
+
+
 ) -> None:
-    """Set up sensor entities from a config entry."""
-    coordinator: VECOServiceAdvisoryCoordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
-    async_add_entities([VECOAdvisoryCountSensor(coordinator, entry)])
 
 
-class VECOAdvisoryCountSensor(CoordinatorEntity, SensorEntity):
+
+
+
+
     """Sensor that reports the total number of parsed service advisories."""
 
     _attr_icon = "mdi:lightning-bolt"
@@ -63,7 +67,7 @@ class VECOAdvisoryCountSensor(CoordinatorEntity, SensorEntity):
         self,
         coordinator: VECOServiceAdvisoryCoordinator,
         entry: ConfigEntry,
-    ) -> None:
+
         """Initialise the sensor."""
         super().__init__(coordinator)
         self._entry = entry
