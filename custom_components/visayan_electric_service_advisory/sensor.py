@@ -3,9 +3,13 @@ from __future__ import annotations
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import DOMAIN, COORDINATOR
+from .coordinator import VECOServiceAdvisoryCoordinator
 
 
 async def async_setup_entry(
@@ -14,7 +18,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensor and button entities from a config entry."""
-
+    coordinator: VECOServiceAdvisoryCoordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
+    
     # Add both the advisory count sensor and a manual scrape button
     async_add_entities([
         VECOAdvisoryCountSensor(coordinator, entry),
@@ -25,10 +30,11 @@ async def async_setup_entry(
 class ManualScrapeButton(CoordinatorEntity, ButtonEntity):
     """Button to manually trigger a scrape of the latest advisory."""
 
-    _attr_icon = "mdi:restart"
+    _attr_icon = "mdi:refresh"
     _attr_name = "Visayan Electric Manual Scrape"
 
     def __init__(self, coordinator: VECOServiceAdvisoryCoordinator, entry: ConfigEntry) -> None:
+        """Initialize the button."""
         super().__init__(coordinator)
         self._entry = entry
         self._attr_unique_id = f"{entry.entry_id}_manual_scrape"
@@ -37,6 +43,7 @@ class ManualScrapeButton(CoordinatorEntity, ButtonEntity):
             "name": "Visayan Electric Service Advisory",
             "manufacturer": "Visayan Electric Company",
             "model": "Service Advisory Scraper",
+            "entry_type": "service",
         }
 
     async def async_press(self) -> None:
@@ -44,21 +51,8 @@ class ManualScrapeButton(CoordinatorEntity, ButtonEntity):
         await self.coordinator.async_refresh()
 
 
-from .coordinator import VECOServiceAdvisoryCoordinator
-
-
-
-
-
-
-) -> None:
-
-
-
-
-
-
-    """Sensor that reports the total number of parsed service advisories."""
+class VECOAdvisoryCountSensor(CoordinatorEntity, SensorEntity):
+    """Sensor that reports the total number of parsed service advisories from the latest post."""
 
     _attr_icon = "mdi:lightning-bolt"
     _attr_native_unit_of_measurement = "advisories"
@@ -67,7 +61,7 @@ from .coordinator import VECOServiceAdvisoryCoordinator
         self,
         coordinator: VECOServiceAdvisoryCoordinator,
         entry: ConfigEntry,
-
+    ) -> None:
         """Initialise the sensor."""
         super().__init__(coordinator)
         self._entry = entry
