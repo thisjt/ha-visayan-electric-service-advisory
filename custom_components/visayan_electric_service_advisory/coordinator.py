@@ -1,6 +1,7 @@
 """Data update coordinator for Visayan Electric Service Advisory."""
 from __future__ import annotations
 
+import html
 import json
 import logging
 import re
@@ -15,74 +16,111 @@ from .const import DOMAIN, DEFAULT_SCAN_INTERVAL, SERVICE_ADVISORY_URL
 
 _LOGGER = logging.getLogger(__name__)
 
-# Unicode "CANCELLED" in mathematical bold capitals (𝗖𝗔𝗡𝗖𝗘𝗟𝗟𝗘𝗗)
-# The text uses Unicode Mathematical Bold Capital letters
-CANCELLED_UNICODE = "\U0001d402\U0001d400\U0001d40d\U0001d402\U0001d404\U0001d40b\U0001d40b\U0001d404\U0001d403"
+def _parse_post_html(html_content: str, post_data: dict) -> list[dict]:
+    """Parse the full post HTML into a list of advisory dicts."""
+    # Find the post content container
+    post_match = re.search(r'<section[^>]*data-hook="post-description"[^>]*>(.*?)</section>', html_content, re.DOTALL)
+    if post_match:
+        content = post_match.group(1)
+    else:
+        content = html_content
 
-# Pattern to parse each interruption block from the excerpt
-# Matches: Time: ... (duration) Purpose: ... Areas Affected: ... [up to next Time:, Map:, or end]
-_ADVISORY_PATTERN = re.compile(
-    r"Time:\s*"
-    r"(?P<cancelled_pre>(?:CANCELLED|" + re.escape(CANCELLED_UNICODE) + r")\s*)?"
-    r"(?P<time>[^\(\n]+?)"
-    r"(?:\s*\((?P<duration>[^\)]+)\))?"
-    r"\s*(?:CANCELLED|" + re.escape(CANCELLED_UNICODE) + r")?\s*"
-    r"Purpose:\s*(?P<purpose>.+?)\s*"
-    r"Areas Affected:\s*(?P<areas>.+?)"
-    r"(?=\s*Map:|\s*Time:|\.\.\.$|$)",
-    re.DOTALL | re.IGNORECASE,
-)
+    content = content.replace('&nbsp;', ' ').replace('\xa0', ' ')
 
-# Pattern to get the leading date from an excerpt
-_DATE_PATTERN = re.compile(
-    r"^([A-Z][a-z]+ \d{1,2},\s*\d{4})",
-)
-
-
-def _parse_excerpt(excerpt: str, post: dict) -> list[dict]:
-    """Parse a post excerpt into a list of advisory dicts."""
     advisories = []
+    current_date = post_data.get("title", "Unknown Date")
+    date_regex = re.compile(r'([A-Za-z]+ \d{1,2}, \d{4})')
+    
+    items = []
+    
+    # Find dates (underlined spans are the common marker for dates in these posts)
+    for match in re.finditer(r'<u[^>]*>.*?<span>([^<]+, \d{4}[^<]*)</span>.*?</u>', content, re.DOTALL):
+        items.append({
+            'pos': match.start(),
+            'type': 'date',
+            'value': match.group(1).strip()
+        })
+    
+    # If no structured dates found, look for plain text dates
+    if not items:
+         for match in re.finditer(r'([A-Za-z]+ \d{1,2}, \d{4} \([A-Za-z]+\))', content):
+             items.append({
+                'pos': match.start(),
+                'type': 'date',
+                'value': match.group(1).strip()
+            })
 
-    map_url = (
-        post.get("media", {})
-        .get("wixMedia", {})
-        .get("image", {})
-        .get("url", "")
-    )
-
-    date_match = _DATE_PATTERN.match(excerpt.strip())
-    date_str = date_match.group(1).strip() if date_match else post.get("title", "")
-
-    for m in _ADVISORY_PATTERN.finditer(excerpt):
-        time_raw = (m.group("time") or "").strip()
-        duration_raw = (m.group("duration") or "").strip()
-        purpose_raw = (m.group("purpose") or "").strip()
-        areas_raw = (m.group("areas") or "").strip().rstrip(".")
-
-        # Detect cancellation: either a prefix group matched, or the time string
-        # contains a cancelled marker
-        cancelled = bool(m.group("cancelled_pre")) or (
-            "CANCELLED" in time_raw.upper()
-            or CANCELLED_UNICODE in time_raw
-        )
-
-        # Clean unicode CANCELLED out of time string
-        time_clean = time_raw.replace(CANCELLED_UNICODE, "").replace("CANCELLED", "").strip()
-
-        advisories.append(
-            {
-                "date": date_str,
-                "time": time_clean,
-                "duration": duration_raw,
-                "cancelled": cancelled,
-                "purpose": purpose_raw,
-                "areas_affected": areas_raw,
-                "map": map_url,
-                "post_url": post.get("link", ""),
-                "post_title": post.get("title", ""),
+    # Find tables (each advisory is in a table)
+    for match in re.finditer(r'<table.*?>.*?</table>', content, re.DOTALL):
+        items.append({
+            'pos': match.start(),
+            'type': 'table',
+            'value': match.group(0)
+        })
+        
+    # Sort by position to maintain the date -> table relationship
+    items.sort(key=lambda x: x['pos'])
+    
+    for item in items:
+        if item['type'] == 'date':
+            d_match = date_regex.search(item['value'])
+            if d_match:
+                current_date = d_match.group(1)
+        elif item['type'] == 'table':
+            table_content = item['value']
+            advisory = {
+                "date": current_date,
+                "time": "",
+                "duration": "",
+                "cancelled": False,
+                "purpose": "",
+                "areas_affected": "",
+                "map": "",
+                "post_url": post_data.get("link", ""),
+                "post_title": post_data.get("title", ""),
             }
-        )
-
+            
+            # Extract fields from table rows
+            rows = re.findall(r'<tr.*?>(.*?)</tr>', table_content, re.DOTALL)
+            for row in rows:
+                cells = re.findall(r'<td.*?>(.*?)</td>', row, re.DOTALL)
+                if len(cells) >= 2:
+                    label = re.sub(r'<[^>]+>', '', cells[0]).strip()
+                    # Wix sometimes puts complex HTML in the value cell
+                    value_html = cells[1]
+                    value = re.sub(r'<[^>]+>', '', value_html).strip()
+                    value = html.unescape(value)
+                    
+                    if "Time" in label:
+                        advisory["time"] = value
+                        # Extract duration if present: (4hrs)
+                        duration_match = re.search(r'\((\d+(\.\d+)?hrs)\)', value)
+                        if duration_match:
+                            advisory["duration"] = duration_match.group(1)
+                            advisory["time"] = value.split('(')[0].strip()
+                        
+                        if "CANCELLED" in value.upper() or CANCELLED_UNICODE in value:
+                            advisory["cancelled"] = True
+                    elif "Purpose" in label:
+                        advisory["purpose"] = value
+                    elif "Areas Affected" in label:
+                        advisory["areas_affected"] = value
+                    elif "Map" in label:
+                        # Extract image URI from Wix image component
+                        image_match = re.search(r'data-image-info=[\'\"]({.*?})[\'\"]', value_html)
+                        if image_match:
+                            try:
+                                json_str = html.unescape(image_match.group(1))
+                                img_info = json.loads(json_str)
+                                uri = img_info.get("uri") or img_info.get("imageData", {}).get("uri")
+                                if uri:
+                                    advisory["map"] = f"https://static.wixstatic.com/media/{uri}"
+                            except:
+                                pass
+            
+            if advisory["time"] or advisory["purpose"] or advisory["areas_affected"]:
+                advisories.append(advisory)
+                
     return advisories
 
 
@@ -139,6 +177,7 @@ class VECOServiceAdvisoryCoordinator(DataUpdateCoordinator):
         """Fetch data from VECO website."""
         try:
             async with aiohttp.ClientSession() as session:
+                # Step 1: Fetch the blog feed page to find the latest post
                 async with session.get(
                     SERVICE_ADVISORY_URL,
                     timeout=aiohttp.ClientTimeout(total=30),
@@ -152,24 +191,46 @@ class VECOServiceAdvisoryCoordinator(DataUpdateCoordinator):
                         raise UpdateFailed(
                             f"HTTP {resp.status} fetching {SERVICE_ADVISORY_URL}"
                         )
-                    html = await resp.text()
+                    feed_html = await resp.text()
+
+                posts = _extract_posts_from_html(feed_html)
+                if not posts:
+                    _LOGGER.debug("No posts found in feed page.")
+                    return []
+
+                # Determine the latest post based on firstPublishedDate
+                latest_post = max(
+                    posts,
+                    key=lambda p: p.get("firstPublishedDate", "")
+                )
+                
+                post_url = latest_post.get("link")
+                if not post_url:
+                    _LOGGER.error("Latest post missing link.")
+                    return []
+
+                # Step 2: Fetch the full HTML of the latest post
+                _LOGGER.debug("Fetching latest advisory post: %s", post_url)
+                async with session.get(
+                    post_url,
+                    timeout=aiohttp.ClientTimeout(total=30),
+                    headers={
+                        "User-Agent": (
+                            "Mozilla/5.0 (compatible; HomeAssistant/VECO-SA)"
+                        )
+                    },
+                ) as resp:
+                    if resp.status != 200:
+                        raise UpdateFailed(
+                            f"HTTP {resp.status} fetching {post_url}"
+                        )
+                    post_html = await resp.text()
+
         except aiohttp.ClientError as err:
             raise UpdateFailed(f"Network error fetching VECO page: {err}") from err
 
-        posts = _extract_posts_from_html(html)
-
-        if not posts:
-            _LOGGER.debug("No posts found in page.")
-            return []
-
-        # Determine the latest post based on firstPublishedDate
-        latest_post = max(
-            posts,
-            key=lambda p: p.get("firstPublishedDate", "")
-        )
-        # Parse advisories only from the latest post's excerpt
-        excerpt = latest_post.get("excerpt", "")
-        advisories: list[dict] = _parse_excerpt(excerpt, latest_post)
+        # Step 3: Parse the full post HTML
+        advisories: list[dict] = _parse_post_html(post_html, latest_post)
 
         _LOGGER.debug(
             "Fetched %d advisories from latest post (title: %s)",
