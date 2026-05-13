@@ -1,0 +1,11 @@
+{
+  "domain": "visayan_electric_service_advisory",
+  "name": "Visayan Electric Service Advisory",
+  "codeowners": [],
+  "config_flow": true,
+  "documentation": "https://github.com/thisjt/ha-visayan-electric-service-advisory",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "version": "1.0.0",
+  "requirements": []
+}

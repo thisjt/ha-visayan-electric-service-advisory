@@ -1,0 +1,74 @@
+[
+  {
+    "Date": "May 10, 2026",
+    "Time": "8:00 AM to 12:00 PM",
+    "Duration": "4hrs",
+    "Cancelled": "No",
+    "Purpose": "To improve the reliability of the distribution system serving Brgy. Inayagan, Tuyan & Tunghaan by facilitating reconstruction of primary lines.",
+    "Areas Affected": "Portion of Inayagan, Tuyan & Tunghaan, City of Naga & Minglanilla, along portions of Cebu South Road.",
+    "Map": "https://static.wixstatic.com/media/11b464_73391d27eec8456b839b1114d8e2968d~mv2.png"
+  },
+  {
+    "Date": "May 3, 2026",
+    "Time": "7:00 AM to 5:00 PM",
+    "Duration": "10hrs",
+    "Cancelled": "No",
+    "Purpose": "To increase the capacity of the distribution system serving Brgy. Cotcot & Jubay by facilitating extension of primary lines (line stringing).",
+    "Areas Affected": "Portion of Cotcot & Jubay, Liloan, along portions of C. Vicinal Rd. & Cebu North Road, including portions of Sitios Bayabas, Caimito, Dao, Fatima, Ilacot, Kalit, Kalubihan, Kamansi, Kumpang, Libo, Saging, Sambag, San Antonio, San Roque, Tabu-an, Tiltilon, Tulay, Ylaya, and",
+    "Map": "https://static.wixstatic.com/media/a69d9c_26e235636d25419b8e74e4bf7b81ad7f~mv2.png"
+  },
+  {
+    "Date": "April 26, 2026",
+    "Time": "9:00 AM to 5:00 PM",
+    "Duration": "8hrs",
+    "Cancelled": "No",
+    "Purpose": "To increase the capacity of the distribution system serving Brgy. Garing by facilitating extension of primary lines (line stringing).",
+    "Areas Affected": "Portion of Garing, Consolacion, including portions of Purok Lubi.",
+    "Map": "https://static.wixstatic.com/media/a69d9c_e8798becadb8422fae1d0e150b5672de~mv2.png"
+  },
+  {
+    "Date": "April 26, 2026",
+    "Time": "3:30 PM to 5:00 PM",
+    "Duration": "1.5hrs",
+    "Cancelled": "No",
+    "Purpose": "To improve the reliability of the distribution system serving Brgy. Garing by facilitating reconstruction of primary lines.",
+    "Areas Affected": "Portion of Garing,",
+    "Map": "https://static.wixstatic.com/media/a69d9c_e8798becadb8422fae1d0e150b5672de~mv2.png"
+  },
+  {
+    "Date": "April 19, 2026",
+    "Time": "4:00 AM to 6:00 AM",
+    "Duration": "2hrs",
+    "Cancelled": "No",
+    "Purpose": "To improve the reliability of the distribution system serving Brgy. Cabancalan, Casuntingan & Bakilid by facilitating restoration of loops.",
+    "Areas Affected": "Portion of Cabancalan, Casuntingan & Bakilid, Mandaue City, along M.L. Quezon Avenue, P. Remedios St.  & E. Aguirre St.",
+    "Map": "https://static.wixstatic.com/media/a69d9c_abf57dd1611b4902b33101b5c912bb20~mv2.png"
+  },
+  {
+    "Date": "April 12, 2026",
+    "Time": "8:00 AM to 4:00 PM (8hrs) \ud835\udc02\ud835\udc00\ud835\udc0d\ud835\udc02\ud835\udc04\ud835\udc0b\ud835\udc0b\ud835\udc04\ud835\udc03",
+    "Duration": "",
+    "Cancelled": "No",
+    "Purpose": "To increase the capacity of the distribution system serving Brgy. Sawang Calero by facilitating extension of primary lines (line stringing).",
+    "Areas Affected": "Portion of Sawang Calero, Cebu City, along Candido Padilla St.",
+    "Map": "https://static.wixstatic.com/media/a69d9c_d839403c67594ce88ccdb8131caa0e37~mv2.png"
+  },
+  {
+    "Date": "April 7, 2026",
+    "Time": "9:00 AM to 5:00 PM",
+    "Duration": "8hrs",
+    "Cancelled": "No",
+    "Purpose": "To increase the capacity of the distribution system serving Brgy. Lahug by facilitating installation of distribution transformer.",
+    "Areas Affected": "Portion of Lahug, Cebu City,  along La Guardia St., St. Anthony St., and St. Lawrence St.",
+    "Map": "https://static.wixstatic.com/media/9a94a4_0c0f1f60321b468dba618cc83ecea828~mv2.png"
+  },
+  {
+    "Date": "April 7, 2026",
+    "Time": "9:00 AM to 5:00 PM",
+    "Duration": "8hrs",
+    "Cancelled": "No",
+    "Purpose": "To improve the reliability of the distribution system serving Brgy. Polog by facilitating installation of primary pole.",
+    "Areas Affected": "Portion of",
+    "Map": "https://static.wixstatic.com/media/9a94a4_0c0f1f60321b468dba618cc83ecea828~mv2.png"
+  }
+]

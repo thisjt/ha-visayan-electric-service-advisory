@@ -1,0 +1,33 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Configure Visayan Electric Service Advisory",
+                "description": "Enter the locations you want to monitor for service advisories. Separate multiple locations with a comma (e.g., Canduman, Jagobiao).",
+                "data": {
+                    "locations": "Locations to monitor"
+                }
+            }
+        },
+        "error": {
+            "no_locations": "You must specify at least one location."
+        },
+        "abort": {
+            "already_configured": "Service is already configured."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Update monitored locations",
+                "description": "Update the locations you want to monitor for service advisories.",
+                "data": {
+                    "locations": "Locations to monitor"
+                }
+            }
+        },
+        "error": {
+            "no_locations": "You must specify at least one location."
+        }
+    }
+}
