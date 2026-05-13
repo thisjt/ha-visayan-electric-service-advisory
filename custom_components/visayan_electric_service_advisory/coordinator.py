@@ -158,12 +158,22 @@ class VECOServiceAdvisoryCoordinator(DataUpdateCoordinator):
 
         posts = _extract_posts_from_html(html)
 
-        advisories: list[dict] = []
-        for post in posts:
-            excerpt = post.get("excerpt", "")
-            advisories.extend(_parse_excerpt(excerpt, post))
+        if not posts:
+            _LOGGER.debug("No posts found in page.")
+            return []
+
+        # Determine the latest post based on firstPublishedDate
+        latest_post = max(
+            posts,
+            key=lambda p: p.get("firstPublishedDate", "")
+        )
+        # Parse advisories only from the latest post's excerpt
+        excerpt = latest_post.get("excerpt", "")
+        advisories: list[dict] = _parse_excerpt(excerpt, latest_post)
 
         _LOGGER.debug(
-            "Fetched %d advisories from %d posts", len(advisories), len(posts)
+            "Fetched %d advisories from latest post (title: %s)",
+            len(advisories),
+            latest_post.get("title", "")
         )
         return advisories
