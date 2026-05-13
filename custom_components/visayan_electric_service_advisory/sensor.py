@@ -1,7 +1,6 @@
 """Sensor platform for Visayan Electric Service Advisory."""
 from __future__ import annotations
 
-from homeassistant.components.button import ButtonEntity
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -20,35 +19,12 @@ async def async_setup_entry(
     """Set up sensor and button entities from a config entry."""
     coordinator: VECOServiceAdvisoryCoordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
     
-    # Add both the advisory count sensor and a manual scrape button
+    # Add only the advisory count sensor
     async_add_entities([
         VECOAdvisoryCountSensor(coordinator, entry),
-        ManualScrapeButton(coordinator, entry),
     ])
 
 
-class ManualScrapeButton(CoordinatorEntity, ButtonEntity):
-    """Button to manually trigger a scrape of the latest advisory."""
-
-    _attr_icon = "mdi:refresh"
-    _attr_name = "Visayan Electric Manual Scrape"
-
-    def __init__(self, coordinator: VECOServiceAdvisoryCoordinator, entry: ConfigEntry) -> None:
-        """Initialize the button."""
-        super().__init__(coordinator)
-        self._entry = entry
-        self._attr_unique_id = f"{entry.entry_id}_manual_scrape"
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, entry.entry_id)},
-            "name": "Visayan Electric Service Advisory",
-            "manufacturer": "Visayan Electric Company",
-            "model": "Service Advisory Scraper",
-            "entry_type": "service",
-        }
-
-    async def async_press(self) -> None:
-        """Handle the button press – force a refresh of the coordinator."""
-        await self.coordinator.async_refresh()
 
 
 class VECOAdvisoryCountSensor(CoordinatorEntity, SensorEntity):
